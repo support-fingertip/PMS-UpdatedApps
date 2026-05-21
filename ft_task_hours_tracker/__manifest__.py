@@ -16,7 +16,7 @@
         'views/project_project_views.xml',
         'views/res_config_settings_views.xml',
     ],
-    'installable': True,
+'installable': True,
     'application': True,
     'auto_install': False,
     'license': 'LGPL-3',

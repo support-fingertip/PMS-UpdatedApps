@@ -13,9 +13,7 @@
             <xpath expr="//field[@name='brd_submission_date']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-            <xpath expr="//field[@name='go_live_date']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
+           
             <xpath expr="//field[@name='kick_start_meeting_date']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
@@ -34,10 +32,12 @@
              <xpath expr="//field[@name='partner_id']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
-           
+           <xpath expr="//field[@name='pm_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
            
             <xpath expr="//field[@name='date_start']" position="attributes">
-                <attribute name="string">Go Live Date</attribute>
+                <attribute name="invisible">1</attribute>
             </xpath>
 
             <xpath expr="//field[@name='user_id']" position="after">

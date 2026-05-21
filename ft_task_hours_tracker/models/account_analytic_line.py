@@ -12,6 +12,14 @@ class AccountAnalyticLine(models.Model):
             )
         )
 
+    def _check_single_entry_hours(self, unit_amount):
+        time_limit = self._get_task_time_limit()
+        if time_limit > 0 and unit_amount > time_limit:
+            raise UserError(_(
+                'A single timesheet entry cannot exceed %.2f hours.\n'
+                'Please split your time into multiple entries.'
+            ) % time_limit)
+
     def _check_task_time_limit(self, task, new_total):
         time_limit = self._get_task_time_limit()
         if task and time_limit > 0 and new_total > time_limit:
@@ -27,8 +35,10 @@ class AccountAnalyticLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            task_id = vals.get('task_id')
             unit_amount = vals.get('unit_amount', 0.0)
+            if unit_amount > 0:
+                self._check_single_entry_hours(unit_amount)
+            task_id = vals.get('task_id')
             if task_id and unit_amount > 0:
                 task = self.env['project.task'].browse(task_id)
                 new_total = task.effective_hours + unit_amount
@@ -38,10 +48,12 @@ class AccountAnalyticLine(models.Model):
     def write(self, vals):
         if 'unit_amount' in vals or 'task_id' in vals:
             for line in self:
+                new_amount = vals.get('unit_amount', line.unit_amount)
+                if 'unit_amount' in vals and new_amount > 0:
+                    self._check_single_entry_hours(new_amount)
                 task = self.env['project.task'].browse(vals['task_id']) if 'task_id' in vals else line.task_id
                 if not task:
                     continue
-                new_amount = vals.get('unit_amount', line.unit_amount)
                 old_amount = line.unit_amount if line.task_id == task else 0.0
                 new_total = task.effective_hours - old_amount + new_amount
                 self._check_task_time_limit(task, new_total)
