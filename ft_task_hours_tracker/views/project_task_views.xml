@@ -13,7 +13,7 @@
                        string="Actual Hours"
                        widget="float_time"
                        readonly="1"/>
-                <div invisible="not ft_hours_exceeded or not project_id.allow_billable">
+                <div invisible="not ft_hours_exceeded or not ft_allow_billable">
                     <small class="text-danger">
                         <i class="fa fa-exclamation-triangle me-1"/>
                         Task time limit reached!

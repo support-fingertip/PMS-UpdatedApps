@@ -17,6 +17,11 @@ class ProjectTask(models.Model):
         store=True,
         help='True when Total Hours Taken exceeds the global task time limit.',
     )
+    ft_allow_billable = fields.Boolean(
+        related='project_id.allow_billable',
+        string='Is Billable Project',
+        store=False,
+    )
 
     @api.depends('effective_hours')
     def _compute_ft_total_hours_taken(self):
