@@ -15,8 +15,7 @@ class EmployeeExpenseClaim(models.Model):
         readonly=True, default=lambda self: _('New'))
     employee = fields.Many2one(
         'hr.employee', string="Employee", required=True,
-        tracking=True,
-        default=lambda self: self.env.user.employee_id)
+        tracking=True)
     department = fields.Many2one(
         'hr.department', string="Department",
         related='employee.department_id', store=True, readonly=False)
