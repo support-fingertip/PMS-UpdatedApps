@@ -19,8 +19,7 @@ class AssetAssignment(models.Model):
     employee = fields.Many2one(
         'hr.employee', string="Employee", required=True, tracking=True)
     assigned_date = fields.Date(
-        string="Assigned Date", required=True,
-        default=fields.Date.context_today, tracking=True)
+        string="Assigned Date", required=True, tracking=True)
     returned_date = fields.Date(string="Returned Date", tracking=True)
     issued_by = fields.Many2one(
         'res.users', string="Issued By",

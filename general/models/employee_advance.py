@@ -15,8 +15,7 @@ class EmployeeAdvance(models.Model):
     employee = fields.Many2one(
         'hr.employee', string="Employee", required=True, tracking=True)
     advance_date = fields.Date(
-        string="Advance Date", required=True,
-        default=fields.Date.context_today, tracking=True)
+        string="Advance Date", required=True, tracking=True)
     advance_amount = fields.Monetary(
         string="Advance Amount", required=True, tracking=True)
     purpose = fields.Text(string="Purpose", required=True)

@@ -29,8 +29,7 @@ class RecruitmentOffer(models.Model):
 
     # Dates
     offer_date = fields.Date(
-        string="Offer Date", required=True,
-        default=fields.Date.context_today, tracking=True)
+        string="Offer Date", required=True, tracking=True)
     expected_joining_date = fields.Date(string="Expected Joining Date")
 
     # Status
