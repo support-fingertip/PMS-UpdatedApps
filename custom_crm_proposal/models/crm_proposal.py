@@ -660,5 +660,5 @@ class CrmProposalMilestone(models.Model):
     @api.constrains('percentage')
     def _check_percentage(self):
         for record in self:
-            if record.percentage <= 0 or record.percentage > 99:
-                raise ValidationError("Percentage must be a 1 or 2-digit number (1-99).")
+            if record.percentage <= 0 or record.percentage > 100:
+                raise ValidationError("Percentage must be in the range (1-100).")

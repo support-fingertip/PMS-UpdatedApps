@@ -39,6 +39,9 @@
             <xpath expr="//field[@name='date_start']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+            <xpath expr="//field[@name='go_live_date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
 
             <xpath expr="//field[@name='user_id']" position="after">
                 <field name="effective_hours" string="Actual Hours" widget="float_time" readonly="1"/>
@@ -52,6 +55,7 @@
                         <field name="kick_start_meeting_date"/>
                         <field name="brd_approval_date"/>
                         <field name="sandbox_review_date"/>
+                        <field name="go_live_date"/>
                     </group>
 
                     <group>
