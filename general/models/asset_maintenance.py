@@ -16,7 +16,8 @@ class AssetMaintenance(models.Model):
         'company.asset', string="Asset", required=True,
         tracking=True, ondelete='cascade')
     issue_date = fields.Date(
-        string="Issue Date", required=True, tracking=True)
+        string="Issue Date", required=True,
+        default=fields.Date.context_today, tracking=True)
     issue_reported_by = fields.Many2one(
         'hr.employee', string="Issue Reported By")
     issue_description = fields.Text(

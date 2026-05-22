@@ -20,7 +20,8 @@ class EmployeeExpenseClaim(models.Model):
         'hr.department', string="Department",
         related='employee.department_id', store=True, readonly=False)
     claim_date = fields.Date(
-        string="Claim Date", required=True, tracking=True)
+        string="Claim Date", required=True,
+        default=fields.Date.context_today, tracking=True)
 
     # Period
     expense_period_from = fields.Date(string="Expense Period From")
