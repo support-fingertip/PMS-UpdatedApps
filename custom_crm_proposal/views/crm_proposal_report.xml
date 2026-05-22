@@ -1,11 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <record id="paperformat_proposal_report_clean" model="report.paperformat">
+        <field name="name">Proposal Minimal Margin Paper Format</field>
+        <field name="default" eval="True" />
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">25</field>
+        <field name="margin_bottom">25</field>
+        <field name="margin_left">15</field>
+        <field name="margin_right">15</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">20</field>
+        <field name="dpi">96</field>
+    </record>
+
+    <record id="action_report_crm_proposal" model="ir.actions.report">
+        <field name="name">Proposal PDF</field>
+        <field name="model">crm.proposal</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">custom_crm_proposal.report_proposal_document</field>
+        <field name="report_file">custom_crm_proposal.report_proposal_document</field>
+        <field name="binding_model_id" ref="model_crm_proposal"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_proposal_report_clean"/>
+    </record>
+
     <template id="report_proposal_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
-                <t t-call="web.external_layout">
-                    <div class="page" style="counter-reset: proposal-section; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; font-size: 13px;">
+                <t t-call="web.basic_layout">
+
+                    <div class="header" style="font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        <div class="row align-items-center mt-2">
+                            <div class="col-6 text-start">
+                                <img t-if="res_company.logo" t-att-src="image_data_uri(res_company.logo)" style="max-height: 45px; display: block;" alt="Company Logo"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer" style="border-top: 1px solid #005580 !important; padding-top: 8px; font-size: 11px; color: #7f8c8d; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        <div class="row">
+                            <div class="col-6 text-start">
+                                <strong>Fingertip Plus Technologies Pvt. Ltd. — Confidential</strong>
+                            </div>
+                            <div class="col-6 text-end">
+                                <span>Page <span class="page"/> of <span class="topage"/></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="page" style="counter-reset: proposal-section; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; font-size: 13px; margin: 0px !important; padding: 0px !important;">
                         
                         <style>
+
+                            /* Clear default body padding rules forced by wkhtmltopdf */
+                            html, body, .container, .article,  {
+                                margin-top: 0px !important;
+                                padding-top: 0px !important;
+                                top: 0px !important;
+                            }
+
+                            /* 2. Give the page text an explicit top spacer to accommodate the repeating logo header */
+                            .page {
+                                padding-top: 55px !important; 
+                                margin-top: 0px !important;
+                            }
+
                             /* Professional Document Type Styles */
                             h2.proposal-title {
                                 color: #005580;
@@ -147,7 +208,7 @@
                                         </tr>
                                         
                                         <tr style="background-color: #005580 !important; font-weight: bold;">
-                                            <td style="text-align: left; border: 1px solid #dee2e6; color: #ffffff !important;">PROJECT TOTAL</td>
+                                            <td style="text-align: left; border: 1px solid #dee2e6; color: #ffffff !important;">Project Total</td>
                                             <td style="text-align: right; border: 1px solid #dee2e6; color: #ffffff !important;">
                                                 <span t-out="sum(line.cost for line in doc.cost_timeline_ids)" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'/>
                                             </td>
@@ -299,15 +360,4 @@
             </t>
         </t>
     </template>
-
-    <record id="action_report_crm_proposal" model="ir.actions.report">
-        <field name="name">Print Proposal</field>
-        <field name="model">crm.proposal</field>
-        <field name="report_type">qweb-pdf</field>
-        <field name="report_name">custom_crm_proposal.report_proposal_document</field>
-        <field name="report_file">custom_crm_proposal.report_proposal_document</field>
-        <field name="print_report_name">'Proposal - %s' % (object.name)</field>
-        <field name="binding_model_id" ref="model_crm_proposal"/>
-        <field name="binding_type">report</field>
-    </record>
 </odoo>

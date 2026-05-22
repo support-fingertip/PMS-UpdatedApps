@@ -589,7 +589,6 @@ class CrmProposal(models.Model):
                 </p>
             </div>
         """
-
         # Get dynamic client company name from opportunity context
         active_id = self.env.context.get('default_opportunity_id') or self.env.context.get('active_id')
         opp_name = "Mayora India Pvt. Ltd."

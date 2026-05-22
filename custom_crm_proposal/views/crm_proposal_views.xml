@@ -28,7 +28,7 @@
                 </div>
                 <group>
                     <group>
-                        <field name="opportunity_id" readonly="1"/>
+                        <field name="opportunity_id" readonly="1" options="{'no_open': True}"/>
                     </group>
                     <group>
                         <field name="date_proposal" 
