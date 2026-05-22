@@ -14,8 +14,7 @@ class EmployeeExpenseLine(models.Model):
         'employee.expense.claim', string="Expense Claim",
         required=True, ondelete='cascade')
     expense_date = fields.Date(
-        string="Expense Date", required=True,
-        default=fields.Date.context_today)
+        string="Expense Date", required=True)
     category = fields.Many2one(
         'expense.category', string="Category", required=True)
     description = fields.Text(string="Description", required=True)
