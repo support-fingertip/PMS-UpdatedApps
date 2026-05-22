@@ -1,5 +1,5 @@
 from odoo import models, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError
 
 
 class AccountAnalyticLine(models.Model):
@@ -13,17 +13,7 @@ class AccountAnalyticLine(models.Model):
         )
 
     def _is_billable_project(self, project):
-        return project and project.allow_billable
-
-    @api.constrains('name', 'unit_amount', 'project_id')
-    def _constrains_timesheet_required_fields(self):
-        for line in self:
-            if not self._is_billable_project(line.project_id):
-                continue
-            if not (line.name or '').strip():
-                raise ValidationError(_('Description is required. Please enter a description for the timesheet entry.'))
-            if not line.unit_amount or line.unit_amount <= 0:
-                raise ValidationError(_('Time Spent is required. Please enter the hours spent for the timesheet entry.'))
+        return bool(project and project.allow_billable)
 
     def _check_single_entry_hours(self, unit_amount):
         time_limit = self._get_task_time_limit()
@@ -54,18 +44,16 @@ class AccountAnalyticLine(models.Model):
             project = self.env['project.project'].browse(project_id)
             if not self._is_billable_project(project):
                 continue
-            name = (vals.get('name') or '').strip()
-            if not name:
+            if not (vals.get('name') or '').strip():
                 raise UserError(_('Description is required. Please enter a description for the timesheet entry.'))
-            unit_amount = vals.get('unit_amount', 0.0) or 0.0
+            unit_amount = vals.get('unit_amount') or 0.0
             if unit_amount <= 0:
                 raise UserError(_('Time Spent is required. Please enter the hours spent for the timesheet entry.'))
             self._check_single_entry_hours(unit_amount)
             task_id = vals.get('task_id')
             if task_id:
                 task = self.env['project.task'].browse(task_id)
-                new_total = task.effective_hours + unit_amount
-                self._check_task_time_limit(task, new_total)
+                self._check_task_time_limit(task, task.effective_hours + unit_amount)
         return super().create(vals_list)
 
     def write(self, vals):
@@ -77,17 +65,20 @@ class AccountAnalyticLine(models.Model):
             )
             if not self._is_billable_project(project):
                 continue
-            name = (vals.get('name', line.name) or '').strip()
-            if not name:
+            # Validate description only when it is being explicitly changed
+            if 'name' in vals and not (vals.get('name') or '').strip():
                 raise UserError(_('Description is required. Please enter a description for the timesheet entry.'))
-            unit_amount = vals.get('unit_amount', line.unit_amount) or 0.0
-            if unit_amount <= 0:
-                raise UserError(_('Time Spent is required. Please enter the hours spent for the timesheet entry.'))
+            # Validate time only when it is being explicitly changed
             if 'unit_amount' in vals:
+                unit_amount = vals.get('unit_amount') or 0.0
+                if unit_amount <= 0:
+                    raise UserError(_('Time Spent is required. Please enter the hours spent for the timesheet entry.'))
                 self._check_single_entry_hours(unit_amount)
-            task = self.env['project.task'].browse(vals['task_id']) if 'task_id' in vals else line.task_id
-            if task:
-                old_amount = line.unit_amount if line.task_id == task else 0.0
-                new_total = task.effective_hours - old_amount + unit_amount
-                self._check_task_time_limit(task, new_total)
+            # Recalculate task total when hours or task changes
+            if 'unit_amount' in vals or 'task_id' in vals:
+                unit_amount = vals.get('unit_amount', line.unit_amount) or 0.0
+                task = self.env['project.task'].browse(vals['task_id']) if 'task_id' in vals else line.task_id
+                if task:
+                    old_amount = line.unit_amount if line.task_id == task else 0.0
+                    self._check_task_time_limit(task, task.effective_hours - old_amount + unit_amount)
         return super().write(vals)
