@@ -60,20 +60,16 @@ class EmployeeAdvance(models.Model):
                     'pms.employee.advance') or _('New')
         return super().create(vals_list)
 
-    @api.depends('related_expense_claim.total_amount',
-                 'related_expense_claim.approval_status',
-                 'advance_amount')
+    @api.depends('related_expense_claim.total_amount', 'advance_amount')
     def _compute_balance(self):
         for rec in self:
             claim = rec.related_expense_claim
-            adjusted = (
-                claim.total_amount
-                if claim and claim.approval_status == 'paid'
-                else 0.0)
+            adjusted = claim.total_amount if claim else 0.0
             rec.adjusted_amount = adjusted
             rec.balance_amount = (rec.advance_amount or 0.0) - adjusted
 
-    def _recompute_adjustment(self):
+
+def _recompute_adjustment(self):
         """Called by linked claims when paid; updates status."""
         for rec in self:
             rec._compute_balance()

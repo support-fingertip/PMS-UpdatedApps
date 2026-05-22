@@ -13,7 +13,7 @@ class RecruitmentCandidate(models.Model):
         string="Candidate Name", required=True, tracking=True)
     mobile_number = fields.Char(
         string="Mobile Number", required=True, tracking=True)
-    email = fields.Char(string="Email", tracking=True)
+    email = fields.Char(string="Email", required=True, tracking=True)
     current_location = fields.Char(string="Current Location")
     preferred_location = fields.Char(string="Preferred Location")
 
@@ -94,7 +94,21 @@ class RecruitmentCandidate(models.Model):
         default=lambda self: self.env.company)
     active = fields.Boolean(default=True)
 
+    @api.constrains('mobile_number', 'email')
+    def _check_mobile_and_email(self):
+        for rec in self:
+            if rec.mobile_number:
+                digits = re.sub(r'[\s\-+]', '', rec.mobile_number)
+                if not digits.isdigit():
+                    raise ValidationError(_(
+                        "Mobile Number can only contain digits."))
+                if len(digits) < 10:
+                    raise ValidationError(_(
+                        "Mobile Number must be at least 10 digits."))
 
+            if rec.email and not rec.email.endswith('@gmail.com'):
+                raise ValidationError(_(
+                    "Email must be a @gmail.com address."))
 
     @api.depends('interview_ids', 'offer_ids')
     def _compute_counts(self):
