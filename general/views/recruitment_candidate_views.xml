@@ -79,12 +79,12 @@
                             <field name="current_location"/>
                             <field name="preferred_location"/>
                         </group>
+                        <group string="Source">
+                            <field name="source"/>
+                            <field name="referred_by"/>
+                        </group>
                         <group string="Application">
                             <field name="applied_position"/>
-                            <field name="source"/>
-                            <field name="referred_by"
-                                   invisible="source != 'referral'"
-                                   required="source == 'referral'"/>
                         </group>
                     </group>
                     <notebook>

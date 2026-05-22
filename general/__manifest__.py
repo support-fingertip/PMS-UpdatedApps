@@ -35,6 +35,9 @@ Each sub-system has its own top-level menu, sequences and security groups.
         # Sequences
         'data/ir_sequence_data.xml',
 
+        # Master app menu (must load before module menus)
+        'views/general_menus.xml',
+
         # Asset views
         'views/asset_category_views.xml',
         'views/company_asset_views.xml',

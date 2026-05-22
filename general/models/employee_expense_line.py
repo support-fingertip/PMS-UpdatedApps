@@ -8,6 +8,8 @@ class EmployeeExpenseLine(models.Model):
     _description = "Employee Expense Line"
     _order = "expense_date desc, id desc"
 
+    name = fields.Char(
+        string="Reference", compute="_compute_name", store=True)
     expense_claim = fields.Many2one(
         'employee.expense.claim', string="Expense Claim",
         required=True, ondelete='cascade')
@@ -43,6 +45,11 @@ class EmployeeExpenseLine(models.Model):
 
     company_id = fields.Many2one(
         related='expense_claim.company_id', store=True, readonly=True)
+
+    @api.depends('expense_claim.claim_number')
+    def _compute_name(self):
+        for rec in self:
+            rec.name = rec.expense_claim.claim_number or "Expense Line"
 
     @api.constrains('amount')
     def _check_amount(self):

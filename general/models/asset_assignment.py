@@ -47,6 +47,22 @@ class AssetAssignment(models.Model):
         'res.company', string='Company',
         default=lambda self: self.env.company)
 
+    @api.constrains('returned_date', 'assigned_date')
+    def _check_returned_date(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            if rec.returned_date:
+                # Returned date cannot be in the future
+                if rec.returned_date > today:
+                    raise UserError(_(
+                        "Returned Date cannot be a future date."))
+                # Returned date cannot be before the assigned date
+                if rec.assigned_date and \
+                        rec.returned_date < rec.assigned_date:
+                    raise UserError(_(
+                        "Returned Date cannot be earlier than the "
+                        "Assigned Date."))
+
     @api.depends('asset.asset_code', 'employee.name')
     def _compute_display_name(self):
         for rec in self:

@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Expense Management — now a section under the General app -->
     <menuitem id="menu_expense_management_root"
               name="Expense Management"
-              sequence="51"
+              parent="menu_general_root"
+              sequence="20"
               groups="group_expense_user"/>
 
     <menuitem id="menu_expense_claims"
@@ -12,8 +14,14 @@
               action="action_employee_expense_claim"
               sequence="10"/>
 
+     <menuitem id="menu_expense_lines"
+              name="Expense Lines"
+              parent="menu_expense_management_root"
+              action="action_employee_expense_line"
+              sequence="15"/>
+
     <menuitem id="menu_expense_advances"
-              name="Advances"
+              name="Advance Payment"
               parent="menu_expense_management_root"
               action="action_employee_advance"
               sequence="20"/>
@@ -25,7 +33,7 @@
               groups="group_expense_manager"/>
 
     <menuitem id="menu_expense_categories"
-              name="Categories"
+              name="Expense Categories"
               parent="menu_expense_configuration"
               action="action_expense_category"
               sequence="10"/>

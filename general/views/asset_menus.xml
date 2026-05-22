@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Top-level menu: Asset Management -->
+    <!-- Asset Management — now a section under the General app -->
     <menuitem id="menu_asset_management_root"
               name="Asset Management"
-              sequence="50"
+              parent="menu_general_root"
+              sequence="10"
               groups="group_asset_user"/>
 
     <!-- Operational sub-menus -->
@@ -34,7 +35,7 @@
               groups="group_asset_manager"/>
 
     <menuitem id="menu_asset_categories"
-              name="Categories"
+              name="Asset Categories"
               parent="menu_asset_configuration"
               action="action_asset_category"
               sequence="10"/>

@@ -95,12 +95,11 @@ class EmployeeExpenseClaim(models.Model):
                     'pms.employee.expense.claim') or _('New')
         return super().create(vals_list)
 
-    @api.depends('expense_line_ids.amount', 'expense_line_ids.tax_amount')
+    @api.depends('expense_line_ids.amount')
     def _compute_total_amount(self):
         for claim in self:
             claim.total_amount = sum(
-                (line.amount + (line.tax_amount or 0.0))
-                for line in claim.expense_line_ids)
+                line.amount for line in claim.expense_line_ids)
 
     @api.constrains('expense_period_from', 'expense_period_to')
     def _check_period(self):

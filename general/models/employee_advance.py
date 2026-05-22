@@ -35,9 +35,10 @@ class EmployeeAdvance(models.Model):
         ],
         string="Status", required=True, default='open', tracking=True)
 
-    related_expense_claim_ids = fields.One2many(
-        'employee.expense.claim', 'advance_id',
-        string="Related Expense Claims")
+    related_expense_claim = fields.Many2one(
+        'employee.expense.claim',
+        string="Related Expense Claim",
+        help="Claim used for adjustment of this advance.")
 
     currency_id = fields.Many2one(
         'res.currency', string='Currency',
@@ -60,15 +61,16 @@ class EmployeeAdvance(models.Model):
                     'pms.employee.advance') or _('New')
         return super().create(vals_list)
 
-    @api.depends('related_expense_claim_ids.total_amount',
-                 'related_expense_claim_ids.approval_status',
+    @api.depends('related_expense_claim.total_amount',
+                 'related_expense_claim.approval_status',
                  'advance_amount')
     def _compute_balance(self):
         for rec in self:
-            adjusted = sum(
-                c.total_amount
-                for c in rec.related_expense_claim_ids
-                if c.approval_status == 'paid')
+            claim = rec.related_expense_claim
+            adjusted = (
+                claim.total_amount
+                if claim and claim.approval_status == 'paid'
+                else 0.0)
             rec.adjusted_amount = adjusted
             rec.balance_amount = (rec.advance_amount or 0.0) - adjusted
 

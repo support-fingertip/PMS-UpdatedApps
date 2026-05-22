@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Recruitment — now a section under the General app -->
     <menuitem id="menu_recruitment_root"
               name="Recruitment Management"
-              sequence="52"
+              parent="menu_general_root"
+              sequence="30"
               groups="group_recruitment_user"/>
 
     <menuitem id="menu_recruitment_job_positions"
@@ -18,23 +20,23 @@
               action="action_recruitment_candidate"
               sequence="20"/>
 
-    <menuitem id="menu_recruitment_interviews"
-              name="Interviews"
-              parent="menu_recruitment_root"
-              action="action_recruitment_interview"
-              sequence="30"/>
+<!--    <menuitem id="menu_recruitment_interviews"-->
+<!--              name="Interviews"-->
+<!--              parent="menu_recruitment_root"-->
+<!--              action="action_recruitment_interview"-->
+<!--              sequence="30"/>-->
 
-    <menuitem id="menu_recruitment_offers"
-              name="Offers"
-              parent="menu_recruitment_root"
-              action="action_recruitment_offer"
-              sequence="40"/>
+<!--    <menuitem id="menu_recruitment_offers"-->
+<!--              name="Offers"-->
+<!--              parent="menu_recruitment_root"-->
+<!--              action="action_recruitment_offer"-->
+<!--              sequence="40"/>-->
 
-    <menuitem id="menu_recruitment_onboarding"
-              name="Onboarding"
-              parent="menu_recruitment_root"
-              action="action_employee_onboarding"
-              sequence="50"/>
+<!--    <menuitem id="menu_recruitment_onboarding"-->
+<!--              name="Onboarding"-->
+<!--              parent="menu_recruitment_root"-->
+<!--              action="action_employee_onboarding"-->
+<!--              sequence="50"/>-->
 
     <!-- Reports sub-menu -->
     <menuitem id="menu_recruitment_reports"
@@ -73,16 +75,16 @@
               sequence="50"/>
 
     <!-- Configuration sub-menu -->
-    <menuitem id="menu_recruitment_configuration"
-              name="Configuration"
-              parent="menu_recruitment_root"
-              sequence="90"
-              groups="group_recruitment_manager"/>
+<!--    <menuitem id="menu_recruitment_configuration"-->
+<!--              name="Configuration"-->
+<!--              parent="menu_recruitment_root"-->
+<!--              sequence="90"-->
+<!--              groups="group_recruitment_manager"/>-->
 
-    <menuitem id="menu_recruitment_skills"
-              name="Skills"
-              parent="menu_recruitment_configuration"
-              action="action_recruitment_skill"
-              sequence="10"/>
+<!--    <menuitem id="menu_recruitment_skills"-->
+<!--              name="Skills"-->
+<!--              parent="menu_recruitment_configuration"-->
+<!--              action="action_recruitment_skill"-->
+<!--              sequence="10"/>-->
 
 </odoo>

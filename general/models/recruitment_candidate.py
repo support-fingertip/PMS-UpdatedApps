@@ -94,6 +94,8 @@ class RecruitmentCandidate(models.Model):
         default=lambda self: self.env.company)
     active = fields.Boolean(default=True)
 
+
+
     @api.depends('interview_ids', 'offer_ids')
     def _compute_counts(self):
         for rec in self:
