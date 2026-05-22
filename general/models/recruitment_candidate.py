@@ -99,6 +99,9 @@ class RecruitmentCandidate(models.Model):
 
     @api.constrains('mobile_number', 'email')
     def _check_mobile_and_email(self):
+        email_pattern = re.compile(
+            r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+
         for rec in self:
             if rec.mobile_number:
                 digits = re.sub(r'[\s\-+]', '', rec.mobile_number)
@@ -109,9 +112,9 @@ class RecruitmentCandidate(models.Model):
                     raise ValidationError(_(
                         "Mobile Number must be at least 10 digits."))
 
-            if rec.email and not rec.email.endswith('@gmail.com'):
+            if rec.email and not email_pattern.match(rec.email):
                 raise ValidationError(_(
-                    "Email must be a @gmail.com address."))
+                    "Please enter a valid email address."))
 
     @api.depends('interview_ids', 'offer_ids')
     def _compute_counts(self):

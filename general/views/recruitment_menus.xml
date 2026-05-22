@@ -56,23 +56,23 @@
               action="action_candidate_pipeline_report"
               sequence="20"/>
 
-    <menuitem id="menu_recruitment_report_interview"
-              name="Interview Schedule"
-              parent="menu_recruitment_reports"
-              action="action_interview_schedule_report"
-              sequence="30"/>
+<!--    <menuitem id="menu_recruitment_report_interview"-->
+<!--              name="Interview Schedule"-->
+<!--              parent="menu_recruitment_reports"-->
+<!--              action="action_interview_schedule_report"-->
+<!--              sequence="30"/>-->
 
-    <menuitem id="menu_recruitment_report_offer"
-              name="Offer Status Report"
-              parent="menu_recruitment_reports"
-              action="action_offer_status_report"
-              sequence="40"/>
+<!--    <menuitem id="menu_recruitment_report_offer"-->
+<!--              name="Offer Status Report"-->
+<!--              parent="menu_recruitment_reports"-->
+<!--              action="action_offer_status_report"-->
+<!--              sequence="40"/>-->
 
-    <menuitem id="menu_recruitment_report_checklist"
-              name="Joining Checklist"
-              parent="menu_recruitment_reports"
-              action="action_joining_checklist_report"
-              sequence="50"/>
+<!--    <menuitem id="menu_recruitment_report_checklist"-->
+<!--              name="Joining Checklist"-->
+<!--              parent="menu_recruitment_reports"-->
+<!--              action="action_joining_checklist_report"-->
+<!--              sequence="50"/>-->
 
     <!-- Configuration sub-menu -->
 <!--    <menuitem id="menu_recruitment_configuration"-->
