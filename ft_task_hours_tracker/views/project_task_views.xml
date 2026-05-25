@@ -37,18 +37,5 @@
         </field>
     </record>
 
-    <!-- Hide the hr_timesheet Timesheets tab on the task form.
-         Timesheets are managed centrally from the project's Timesheets tab (qa_timesheets).
-         Having both visible makes the same entry appear in two places ("doubled"). -->
-    <record id="view_task_form_ft_hide_timesheets_tab" model="ir.ui.view">
-        <field name="name">project.task.form.ft.hide.timesheets.tab</field>
-        <field name="model">project.task</field>
-        <field name="inherit_id" ref="hr_timesheet.view_task_form2_inherited"/>
-        <field name="arch" type="xml">
-            <xpath expr="//page[@name='page_timesheets']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-        </field>
-    </record>
 
 </odoo>
