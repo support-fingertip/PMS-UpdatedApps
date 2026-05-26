@@ -128,12 +128,36 @@ class AccountAnalyticLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        result_ids = []
+        to_create = []
         for vals in vals_list:
-            if vals.get('project_id') and not vals.get('project_status'):
-                project = self.env['project.project'].browse(vals['project_id'])
+            task_id = vals.get('task_id')
+            project_id = vals.get('project_id')
+            # When both task_id and project_id are present, the project form's
+            # O2M widget can re-submit a task timesheet as a create command even
+            # though the record already exists in the DB.  Detect and skip it.
+            if task_id and project_id:
+                domain = [
+                    ('task_id', '=', task_id),
+                    ('project_id', '=', project_id),
+                ]
+                if vals.get('date'):
+                    domain.append(('date', '=', vals['date']))
+                if vals.get('employee_id'):
+                    domain.append(('employee_id', '=', vals['employee_id']))
+                if vals.get('unit_amount') is not None:
+                    domain.append(('unit_amount', '=', vals['unit_amount']))
+                existing = self.search(domain, limit=1)
+                if existing:
+                    result_ids.append(existing.id)
+                    continue
+            if project_id and not vals.get('project_status'):
+                project = self.env['project.project'].browse(project_id)
                 if project.stage_id:
                     vals['project_status'] = project.stage_id.id
-        return super().create(vals_list)
+            to_create.append(vals)
+        created = super().create(to_create) if to_create else self.browse()
+        return self.browse(result_ids) | created
 
     def write(self, vals):
         # Only refresh project_status snapshot when the project itself changes
