@@ -75,16 +75,23 @@ class InheritProjectProject(models.Model):
                     # Only deduplicate when the record came from a task save
                     # (task timesheets always carry a task_id)
                     if task_id:
-                        existing = self.env['account.analytic.line'].search([
+                        domain = [
                             ('task_id', '=', task_id),
-                            ('date', '=', cv.get('date')),
-                            ('employee_id', '=', cv.get('employee_id')),
-                            ('unit_amount', '=', cv.get('unit_amount')),
-                            ('name', '=', cv.get('name', '')),
                             ('project_id', 'in', self.ids),
-                        ], limit=1)
+                        ]
+                        # Add optional fields only when present in the command
+                        # vals to avoid False-vs-'' mismatches causing missed hits
+                        if cv.get('date'):
+                            domain.append(('date', '=', cv['date']))
+                        if cv.get('employee_id'):
+                            domain.append(('employee_id', '=', cv['employee_id']))
+                        if cv.get('unit_amount') is not None:
+                            domain.append(('unit_amount', '=', cv['unit_amount']))
+                        existing = self.env['account.analytic.line'].search(
+                            domain, limit=1
+                        )
                         if existing:
-                            # Replace the create command with a plain link
+                            # Replace create with a plain link to the existing record
                             deduped.append((4, existing.id, 0))
                             continue
                 deduped.append(cmd)
