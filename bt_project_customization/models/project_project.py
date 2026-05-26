@@ -64,6 +64,33 @@ class InheritProjectProject(models.Model):
             lines = self.env['account.analytic.line'].search([('project_id', '=', project.id)])
             project.timesheet_count = sum(lines.mapped('unit_amount'))
 
+    def write(self, vals):
+        if 'timesheet_ids' in vals:
+            deduped = []
+            for cmd in vals['timesheet_ids']:
+                # cmd[0] == 0 means "create new record via O2M"
+                if cmd[0] == 0:
+                    cv = cmd[2] or {}
+                    task_id = cv.get('task_id')
+                    # Only deduplicate when the record came from a task save
+                    # (task timesheets always carry a task_id)
+                    if task_id:
+                        existing = self.env['account.analytic.line'].search([
+                            ('task_id', '=', task_id),
+                            ('date', '=', cv.get('date')),
+                            ('employee_id', '=', cv.get('employee_id')),
+                            ('unit_amount', '=', cv.get('unit_amount')),
+                            ('name', '=', cv.get('name', '')),
+                            ('project_id', 'in', self.ids),
+                        ], limit=1)
+                        if existing:
+                            # Replace the create command with a plain link
+                            deduped.append((4, existing.id, 0))
+                            continue
+                deduped.append(cmd)
+            vals['timesheet_ids'] = deduped
+        return super().write(vals)
+
     def action_view_timesheets(self):
         self.ensure_one()
         action = self.env['ir.actions.act_window']._for_xml_id('hr_timesheet.timesheet_action_all')
