@@ -4,12 +4,13 @@ from odoo import models, fields, api
 class QATestCase(models.Model):
     _name = 'qa_testapp.test_case'
     _description = 'QA Test Case'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'id desc'
     _rec_name = 'test_case_id'
 
     test_case_id = fields.Char(string='Test Case ID', readonly=True, copy=False, default='New')
-    test_case_title = fields.Char(string='Test Case Title', required=True)
-    project_id = fields.Many2one('project.project', string='Project', required=True)
+    test_case_title = fields.Char(string='Test Case Title', required=True, tracking=True)
+    project_id = fields.Many2one('project.project', string='Project', required=True, tracking=True)
     module_id = fields.Many2one(
         'cus.module', string='Module', required=True,
         domain="[('id', 'in', available_module_ids)]",
@@ -28,7 +29,7 @@ class QATestCase(models.Model):
         ('fail', 'Fail'),
         ('blocked', 'Blocked'),
         ('not_executed', 'Not Executed')
-    ], string='Status', default='not_executed')
+    ], string='Status', default='not_executed', tracking=True)
     severity = fields.Selection([
         ('critical', 'Critical'),
         ('high', 'High'),
@@ -69,5 +70,7 @@ class QATestCase(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('test_case_id', 'New') == 'New':
-                vals['test_case_id'] = self.env['ir.sequence'].next_by_code('qa_testapp.test_case') or 'New'
+                vals['test_case_id'] = self.env['ir.sequence'].next_by_code(
+                    'qa_testapp.test_case'
+                ) or 'New'
         return super().create(vals_list)

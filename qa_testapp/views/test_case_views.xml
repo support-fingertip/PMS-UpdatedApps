@@ -65,7 +65,28 @@
                         </page>
                     </notebook>
                 </sheet>
+                <chatter/>
             </form>
+        </field>
+    </record>
+
+    <!-- Search view -->
+    <record id="qa_testapp_view_test_case_search" model="ir.ui.view">
+        <field name="name">qa_testapp.test_case.search</field>
+        <field name="model">qa_testapp.test_case</field>
+        <field name="arch" type="xml">
+            <search string="Search Test Cases">
+                <field name="test_case_id"/>
+                <field name="test_case_title"/>
+                <field name="project_id"/>
+                <field name="module_id"/>
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_by_project"
+                            context="{'group_by': 'project_id'}"/>
+                    <filter string="Status" name="group_by_status"
+                            context="{'group_by': 'status'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
@@ -74,5 +95,6 @@
         <field name="name">Test Cases</field>
         <field name="res_model">qa_testapp.test_case</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="qa_testapp_view_test_case_search"/>
     </record>
 </odoo>

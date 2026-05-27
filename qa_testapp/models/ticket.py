@@ -1,4 +1,18 @@
+import logging
+from datetime import timedelta
+
 from odoo import models, fields, api
+
+_logger = logging.getLogger(__name__)
+
+
+TARGET_TIME_BY_PRIORITY = {
+    'p1': ('15-30 mins',     30),
+    'p2': ('1-2 hours',     120),
+    'p3': ('4-8 hours',     480),
+    'p4': ('1 business day', 24 * 60),
+}
+
 
 class QATicket(models.Model):
     _name = 'qa_testapp.ticket'
@@ -14,6 +28,13 @@ class QATicket(models.Model):
     steps_to_reproduce = fields.Text(string='Steps to Reproduce', help="Numbered steps.")
     expected_result = fields.Text(string='Expected Result')
     actual_result = fields.Text(string='Actual Result')
+
+    is_client = fields.Boolean(string='Client', help="Check if this bug was raised by a client.")
+    is_internal = fields.Boolean(string='Internal', help="Check if this bug was found internally.")
+
+    reporter_id = fields.Many2one('res.users', string='Reporter', default=lambda self: self.env.user, tracking=True)
+    reporter_display = fields.Char(string='Reporter', compute='_compute_reporter_display')
+
     environment = fields.Selection([
         ('sandbox', 'Sandbox'),
         ('qa', 'QA'),
@@ -32,12 +53,22 @@ class QATicket(models.Model):
         ('trivial', 'Trivial')
     ], string='Severity', default='major', tracking=True)
     priority = fields.Selection([
-        ('p0', 'P0 - Urgent'),
-        ('p1', 'P1 - High'),
-        ('p2', 'P2 - Medium'),
-        ('p3', 'P3 - Low'),
-        ('p4', 'P4 - Backlog')
-    ], string='Priority', default='p2', tracking=True)
+        ('p1', 'P1 - Urgent'),
+        ('p2', 'P2 - High'),
+        ('p3', 'P3 - Medium'),
+        ('p4', 'P4 - Low'),
+        ('p5', 'P5 - Backlog')
+    ], string='Priority', default='p3', tracking=True)
+    target_response_time = fields.Char(
+        string='Target Response Time',
+        compute='_compute_target_response', store=True, readonly=True,
+        help='Auto-set from priority. Informational only (not required).',
+    )
+    target_deadline = fields.Datetime(
+        string='Target Deadline',
+        compute='_compute_target_response', store=True, readonly=True,
+        help='Reported date + the upper bound of the priority response band.',
+    )
     status = fields.Selection([
         ('open', 'Open'),
         ('in_progress', 'In Progress'),
@@ -57,9 +88,9 @@ class QATicket(models.Model):
         'ticket_id', 'attachment_id',
         string='Attachments',
     )
-    reporter_id = fields.Many2one('res.users', string='Reporter', default=lambda self: self.env.user, tracking=True)
     reported_date = fields.Datetime(string='Reported Date', default=fields.Datetime.now)
     project_id = fields.Many2one('project.project', string='Project', required=True)
+    module = fields.Char(string='Module (legacy)', tracking=True)
     module_id = fields.Many2one(
         'cus.module', string='Module', tracking=True,
         domain="[('id', 'in', available_module_ids)]",
@@ -69,6 +100,17 @@ class QATicket(models.Model):
     )
     test_case_id = fields.Many2one('qa_testapp.test_case', string='Related Test Case')
     assignee_id = fields.Many2one('res.users', string='Assignee', required=True, tracking=True)
+    reopen_count = fields.Integer(
+        string='Reopen Count', default=0,
+        readonly=True, copy=False, tracking=True,
+        help='Number of times this bug has been re-opened.',
+    )
+    escalation_level = fields.Selection([
+        ('none', 'None'),
+        ('qa_lead', 'QA Lead'),
+        ('manager', 'Manager'),
+    ], string='Escalation', default='none',
+       readonly=True, copy=False, tracking=True)
 
     @api.depends('project_id')
     def _compute_available_modules(self):
@@ -82,9 +124,49 @@ class QATicket(models.Model):
             else:
                 rec.available_module_ids = self.env['cus.module'].sudo().search([])
 
+    @api.depends('priority', 'reported_date')
+    def _compute_target_response(self):
+        for rec in self:
+            mapping = TARGET_TIME_BY_PRIORITY.get(rec.priority)
+            if not mapping:
+                rec.target_response_time = False
+                rec.target_deadline = False
+                continue
+            label, offset_minutes = mapping
+            rec.target_response_time = label
+            rec.target_deadline = (
+                rec.reported_date + timedelta(minutes=offset_minutes)
+                if rec.reported_date else False
+            )
+
+    @api.depends('is_client', 'is_internal', 'reporter_id')
+    def _compute_reporter_display(self):
+        for rec in self:
+            if rec.is_client:
+                rec.reporter_display = "Client"
+            elif rec.is_internal and rec.reporter_id:
+                rec.reporter_display = rec.reporter_id.name
+            else:
+                rec.reporter_display = ""
+
     @api.onchange('project_id')
     def _onchange_project_id(self):
         self.module_id = False
+
+    @api.onchange('is_client')
+    def _onchange_is_client(self):
+        if self.is_client:
+            self.is_internal = False
+            self.reporter_id = False
+            self.priority = 'p1'
+            if self.severity not in ('blocker', 'critical'):
+                self.severity = 'critical'
+
+    @api.onchange('is_internal')
+    def _onchange_is_internal(self):
+        if self.is_internal:
+            self.is_client = False
+            self.reporter_id = self.env.user
 
     def action_in_progress(self):
         self.write({'status': 'in_progress'})
@@ -96,7 +178,75 @@ class QATicket(models.Model):
         self.write({'status': 'closed'})
 
     def action_reopen(self):
-        self.write({'status': 'reopened'})
+        for ticket in self:
+            new_count = ticket.reopen_count + 1
+            ticket.write({'status': 'reopened', 'reopen_count': new_count})
+            ticket._escalate_on_reopen()
+
+    def _escalate_on_reopen(self):
+        """Hierarchy-based escalation driven by reopen_count.
+        3rd reopen -> project.qa_lead_id (fallback: project.user_id), level='qa_lead'.
+        4th+ reopen -> project.user_id (Project Manager), level='manager'."""
+        self.ensure_one()
+        project = self.project_id
+        if not project:
+            return
+        count = self.reopen_count
+        if count < 3:
+            return
+
+        if count == 3:
+            partner = project.partner_id
+            customer_team = (
+                partner.commercial_partner_id.helpdesk_team_id
+                or partner.helpdesk_team_id
+            ) if partner else self.env['ft.helpdesk.team']
+            qa_lead = customer_team.leader_user_id
+            target = qa_lead or project.user_id
+            new_level = 'qa_lead'
+            if qa_lead:
+                target_role = 'QA Lead'
+            elif not partner:
+                target_role = 'Project Manager (no customer on project)'
+            elif not customer_team:
+                target_role = "Project Manager (customer has no Support Team)"
+            else:
+                target_role = 'Project Manager (customer Support Team has no leader)'
+        else:
+            target = project.user_id
+            new_level = 'manager'
+            target_role = 'Project Manager'
+
+        if not target:
+            _logger.warning(
+                "Bug %s: cannot escalate to %s - no user configured on project '%s'",
+                self.bug_id, new_level, project.name,
+            )
+            self.message_post(
+                body=(
+                    "<p>Reopen #%d reached but escalation skipped: no %s "
+                    "configured on project <strong>%s</strong>.</p>"
+                ) % (count, target_role, project.name),
+                message_type='notification',
+            )
+            return
+
+        self.write({'assignee_id': target.id, 'escalation_level': new_level})
+        self.message_post(
+            body=(
+                "<p>Bug re-opened %d time(s). Escalated to <strong>%s</strong>: "
+                "<strong>%s</strong>.</p>"
+            ) % (count, target_role, target.name),
+            message_type='notification',
+        )
+        self.activity_schedule(
+            'mail.mail_activity_data_todo',
+            user_id=target.id,
+            summary='Escalated bug: %s (%d reopens)' % (self.bug_id, count),
+            note='Bug %s - "%s" has been escalated to you after %d reopens.' % (
+                self.bug_id, self.title, count,
+            ),
+        )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -105,17 +255,21 @@ class QATicket(models.Model):
                 vals['bug_id'] = self.env['ir.sequence'].next_by_code('qa_testapp.ticket') or 'New'
         records = super().create(vals_list)
         records._link_evidence_attachments()
+        for record in records:
+            if record.assignee_id:
+                record._notify_assignee()
         return records
 
     def write(self, vals):
         res = super().write(vals)
         if 'evidence_attachment_ids' in vals:
             self._link_evidence_attachments()
+        if 'assignee_id' in vals:
+            for rec in self:
+                rec._notify_assignee()
         return res
 
     def _link_evidence_attachments(self):
-        # Attachments uploaded into the form before save end up with res_id=0,
-        # which blocks non-creator users from reading them. Pin them to this record.
         for rec in self:
             atts = rec.sudo().evidence_attachment_ids
             orphans = atts.filtered(
@@ -123,3 +277,10 @@ class QATicket(models.Model):
             )
             if orphans:
                 orphans.write({'res_model': 'qa_testapp.ticket', 'res_id': rec.id})
+
+    def _notify_assignee(self):
+        self.ensure_one()
+        if self.assignee_id and self.assignee_id.email:
+            template = self.env.ref('qa_testapp.email_template_bug_assigned', raise_if_not_found=False)
+            if template:
+                template.sudo().send_mail(self.id, force_send=True)
