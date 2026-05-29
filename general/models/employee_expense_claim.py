@@ -82,7 +82,6 @@ class EmployeeExpenseClaim(models.Model):
         ('claim_number_uniq', 'unique(claim_number, company_id)',
          'Claim number must be unique per company.'),
     ]
-
     bill_available = fields.Boolean(string="Bills Available")
 
     # --------------------------------------------------------------
