@@ -119,7 +119,6 @@
                                     <field name="tax_amount" sum="Tax"/>
                                     <field name="payment_mode"/>
                                     <field name="bill_attachment" widget="many2many_binary"/>
-                                    <field name="currency_id" invisible="1"/>
                                 </list>
                             </field>
                             <group class="oe_subtotal_footer">
