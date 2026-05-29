@@ -104,6 +104,7 @@
                             <field name="expense_period_to"/>
                             <field name="project_id"/>
                             <field name="partner_id"/>
+                            <field name="bill_available"/>
                         </group>
                     </group>
                     <notebook>
